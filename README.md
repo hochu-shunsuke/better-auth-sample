@@ -1,36 +1,141 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Better Auth サンプル
 
-## Getting Started
+これは [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app) でブートストラップされた [Next.js](https://nextjs.org) プロジェクトで、認証機能として [Better Auth](https://www.better-auth.com/) を統合しています。
 
-First, run the development server:
+## Better Auth セットアップ
+
+このプロジェクトは、Next.jsアプリケーションでのBetter Authの完全なセットアップを実演しています。詳細なドキュメントについては、以下を参照してください: <https://www.better-auth.com/docs/installation>
+
+### 1. パッケージのインストール
+
+```bash
+npm install better-auth
+npm install better-sqlite3  # SQLiteデータベース用
+npm install --save-dev @types/better-sqlite3  # TypeScript型定義
+```
+
+### 2. 環境変数の設定
+
+プロジェクトのルートに `.env` ファイルを作成してください:
+
+```env
+BETTER_AUTH_SECRET=your-secret-key-here-replace-with-random-value
+BETTER_AUTH_URL=http://localhost:3000
+```
+
+シークレットキーを生成:
+
+```bash
+openssl rand -hex 32
+```
+
+### 3. Better Auth インスタンスの作成
+
+プロジェクトルートに `auth.ts` を作成:
+
+```typescript
+import { betterAuth } from "better-auth";
+import Database from "better-sqlite3";
+
+export const auth = betterAuth({
+  database: new Database("./sqlite.db"),
+  emailAndPassword: {
+    enabled: true,
+  },
+  socialProviders: {
+    // 必要に応じてソーシャルプロバイダーを追加
+  },
+});
+```
+
+### 4. データベーステーブルの作成
+
+Better Auth CLIを使用して必要なデータベーステーブルを作成:
+
+```bash
+npx @better-auth/cli migrate
+```
+
+### 5. ハンドラーのマウント
+
+`app/api/auth/[...all]/route.ts` にAPIルートハンドラーを作成:
+
+```typescript
+import { auth } from "@/auth";
+import { toNextJsHandler } from "better-auth/next-js";
+
+export const { POST, GET } = toNextJsHandler(auth);
+```
+
+### 6. クライアントインスタンスの作成
+
+`lib/auth-client.ts` にクライアントライブラリを作成:
+
+```typescript
+import { createAuthClient } from "better-auth/react";
+
+export const authClient = createAuthClient({
+  baseURL: "http://localhost:3000"
+});
+
+export const { signIn, signUp, signOut, useSession } = authClient;
+```
+
+### 7. 実装された機能
+
+- ✅ メール/パスワード認証
+- ✅ ユーザーサインアップ
+- ✅ ユーザーサインイン
+- ✅ ユーザーサインアウト
+- ✅ セッション管理
+- ✅ SQLiteデータベース統合
+
+## 使い方
+
+まず、開発サーバーを起動してください:
 
 ```bash
 npm run dev
-# or
+# または
 yarn dev
-# or
+# または
 pnpm dev
-# or
+# または
 bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+ブラウザで [http://localhost:3000](http://localhost:3000) を開いて認証デモを確認してください。
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+以下のことができます:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+1. 新しいアカウントでサインアップ（メール + パスワード + 名前）
+2. 既存の認証情報でサインイン
+3. ログイン時のセッション情報を表示
+4. サインアウト
 
-## Learn More
+## プロジェクト構造
 
-To learn more about Next.js, take a look at the following resources:
+```text
+├── auth.ts                     # Better Auth設定
+├── lib/
+│   └── auth-client.ts         # クライアントサイド認証ユーティリティ
+├── app/
+│   ├── api/auth/[...all]/
+│   │   └── route.ts           # 認証用APIルート
+│   ├── page.tsx               # 認証デモページ
+│   └── layout.tsx             # ルートレイアウト
+├── .env                       # 環境変数
+└── sqlite.db                  # SQLiteデータベース（自動生成）
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 詳細情報
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- [Better Auth ドキュメント](https://www.better-auth.com/docs)
+- [Better Auth インストールガイド](https://www.better-auth.com/docs/installation)
+- [Next.js ドキュメント](https://nextjs.org/docs)
 
-## Deploy on Vercel
+## Vercelでのデプロイ
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Next.jsアプリをデプロイする最も簡単な方法は、Next.jsの作成者による [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) を使用することです。
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+詳細については、[Next.js デプロイメントドキュメント](https://nextjs.org/docs/app/building-your-application/deploying) をご確認ください。
