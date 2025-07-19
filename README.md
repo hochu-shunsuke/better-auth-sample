@@ -1,4 +1,4 @@
-# Better Auth サンプル
+# better-auth sample
 
 これは [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app) でブートストラップされた [Next.js](https://nextjs.org) プロジェクトで、認証機能として [Better Auth](https://www.better-auth.com/) を統合しています。
 
